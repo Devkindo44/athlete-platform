@@ -18,9 +18,9 @@ import type {
 } from '@prisma/orm-postgres/contract-types';
 
 export type StorageHash =
-  StorageHashBase<'85394ff57491b3279d3d5a70f55919713209a2ad4cb5f9a8318fd703a242e3b8'>;
+  StorageHashBase<'611e64b9923080f808e84a3f63c1470853ebca068175974a17d9463aa229e07d'>;
 export type ExecutionHash =
-  ExecutionHashBase<'7f1e0671c27e78956e941dfb1c9724a63d7e769964e198aebe1fe81b7fa13fbc'>;
+  ExecutionHashBase<'ec5608b8e737a156a9bf898f32cdcb694d977865b3f3df38afb9c0729dd95fc9'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -356,6 +356,18 @@ export type StorageColumnInputTypes = ColumnTypesFromStorage<
 >;
 
 export namespace Models {
+  export type public_AthleteProfile = {
+    bio: FieldOutputTypes['public']['AthleteProfile']['bio'];
+    createdAt: FieldOutputTypes['public']['AthleteProfile']['createdAt'];
+    goal: FieldOutputTypes['public']['AthleteProfile']['goal'];
+    id: FieldOutputTypes['public']['AthleteProfile']['id'];
+    level: FieldOutputTypes['public']['AthleteProfile']['level'];
+    sport: FieldOutputTypes['public']['AthleteProfile']['sport'];
+    updatedAt: FieldOutputTypes['public']['AthleteProfile']['updatedAt'];
+    userId: FieldOutputTypes['public']['AthleteProfile']['userId'];
+    user: public_User;
+    readonly [RelationKeys]?: 'user';
+  };
   export type public_MediaAsset = {
     authorId: FieldOutputTypes['public']['MediaAsset']['authorId'];
     createdAt: FieldOutputTypes['public']['MediaAsset']['createdAt'];
@@ -417,15 +429,17 @@ export namespace Models {
     stripeCustomerId: FieldOutputTypes['public']['User']['stripeCustomerId'];
     updatedAt: FieldOutputTypes['public']['User']['updatedAt'];
     username: FieldOutputTypes['public']['User']['username'];
+    athleteProfiles: public_AthleteProfile[];
     mediaAssets: public_MediaAsset[];
     posts: public_Post[];
     subscription: public_Subscription | null;
-    readonly [RelationKeys]?: 'mediaAssets' | 'posts' | 'subscription';
+    readonly [RelationKeys]?: 'athleteProfiles' | 'mediaAssets' | 'posts' | 'subscription';
   };
 }
 
 export declare const models: {
   public: {
+    AthleteProfile: Models.public_AthleteProfile;
     MediaAsset: Models.public_MediaAsset;
     MediaTranslation: Models.public_MediaTranslation;
     Post: Models.public_Post;
@@ -452,6 +466,89 @@ type ContractBase = Omit<
         readonly kind: 'postgres-schema';
         readonly entries: {
           readonly table: {
+            readonly AthleteProfile: {
+              columns: {
+                readonly bio: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly createdAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly typeParams: { readonly precision: 3 };
+                  readonly many: false;
+                };
+                readonly goal: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                  readonly many: false;
+                };
+                readonly level: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly sport: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly updatedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly precision: 3 };
+                  readonly many: false;
+                };
+                readonly userId: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['userId', 'sport'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'AthleteProfile_userId_idx_a489d58a';
+                  readonly prefix: 'AthleteProfile_userId_idx';
+                  readonly columns: readonly ['userId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'AthleteProfile';
+                    readonly columns: readonly ['userId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'User';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
             readonly MediaAsset: {
               columns: {
                 readonly authorId: {
@@ -925,6 +1022,10 @@ type ContractBase = Omit<
   readonly target: 'postgres';
   readonly targetFamily: 'sql';
   readonly roots: {
+    readonly AthleteProfile: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'AthleteProfile';
+    };
     readonly MediaAsset: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'MediaAsset';
@@ -944,6 +1045,75 @@ type ContractBase = Omit<
     readonly namespaces: {
       readonly public: {
         readonly models: {
+          readonly AthleteProfile: {
+            readonly fields: {
+              readonly bio: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly typeParams: { readonly precision: 3 };
+                };
+              };
+              readonly goal: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly level: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly sport: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly typeParams: { readonly precision: 3 };
+                };
+              };
+              readonly userId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+            };
+            readonly relations: {
+              readonly user: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['userId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'AthleteProfile';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly bio: { readonly column: 'bio' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly goal: { readonly column: 'goal' };
+                readonly id: { readonly column: 'id' };
+                readonly level: { readonly column: 'level' };
+                readonly sport: { readonly column: 'sport' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
+                readonly userId: { readonly column: 'userId' };
+              };
+            };
+          };
           readonly MediaAsset: {
             readonly fields: {
               readonly authorId: {
@@ -1295,6 +1465,17 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
+              readonly athleteProfiles: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'AthleteProfile';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['userId'];
+                };
+              };
               readonly mediaAssets: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -1433,6 +1614,35 @@ type ContractBase = Omit<
     readonly executionHash: ExecutionHash;
     readonly mutations: {
       readonly defaults: readonly [
+        {
+          readonly onCreate: {
+            readonly id: 'timestampNow';
+            readonly kind: 'generator';
+            readonly params: { readonly precision: 3 };
+          };
+          readonly ref: {
+            readonly entry: 'AthleteProfile';
+            readonly field: 'createdAt';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: {
+            readonly id: 'timestampNow';
+            readonly kind: 'generator';
+            readonly params: { readonly precision: 3 };
+          };
+          readonly onUpdate: {
+            readonly id: 'timestampNow';
+            readonly kind: 'generator';
+            readonly params: { readonly precision: 3 };
+          };
+          readonly ref: {
+            readonly entry: 'AthleteProfile';
+            readonly field: 'updatedAt';
+            readonly namespace: 'public';
+          };
+        },
         {
           readonly onCreate: {
             readonly id: 'timestampNow';

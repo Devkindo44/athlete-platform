@@ -22,19 +22,35 @@ enum SubscriptionStatus {
 }
 
 model User {
-  id               Int           @id @default(autoincrement())
-  email            String        @unique
-  username         String?       @unique
+  id               Int              @id @default(autoincrement())
+  email            String           @unique
+  username         String?          @unique
   name             String?
   passwordHash     String?
-  role             UserRole      @default(MEMBER)
-  preferredLocale  String        @default("fr")
-  stripeCustomerId String?       @unique
+  role             UserRole         @default(MEMBER)
+  preferredLocale  String           @default("fr")
+  stripeCustomerId String?          @unique
   subscription     Subscription?
+  athleteProfiles  AthleteProfile[]
   posts            Post[]
   mediaAssets      MediaAsset[]
-  createdAt        DateTime      @default(now()) @onCreate(now())
+  createdAt        DateTime         @default(now()) @onCreate(now())
   updatedAt        temporal.UpdatedAt
+}
+
+model AthleteProfile {
+  id        Int                @id @default(autoincrement())
+  userId    Int
+  user      User               @relation(fields: [userId], references: [id])
+  sport     String
+  level     String?
+  goal      String?
+  bio       String?
+  createdAt DateTime           @default(now()) @onCreate(now())
+  updatedAt temporal.UpdatedAt
+
+  @@index([userId])
+  @@unique([userId, sport])
 }
 
 model Post {
