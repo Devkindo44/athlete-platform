@@ -8,6 +8,22 @@
       "model": "AthleteProfile",
       "namespace": "public"
     },
+    "Comment": {
+      "model": "Comment",
+      "namespace": "public"
+    },
+    "CommentReaction": {
+      "model": "CommentReaction",
+      "namespace": "public"
+    },
+    "Competition": {
+      "model": "Competition",
+      "namespace": "public"
+    },
+    "Donation": {
+      "model": "Donation",
+      "namespace": "public"
+    },
     "MediaAsset": {
       "model": "MediaAsset",
       "namespace": "public"
@@ -33,6 +49,116 @@
     "namespaces": {
       "public": {
         "enum": {
+          "AccessTier": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "PUBLIC",
+                "value": "PUBLIC"
+              },
+              {
+                "name": "GOLD",
+                "value": "GOLD"
+              },
+              {
+                "name": "PREMIUM",
+                "value": "PREMIUM"
+              }
+            ]
+          },
+          "CommentStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "PENDING",
+                "value": "PENDING"
+              },
+              {
+                "name": "APPROVED",
+                "value": "APPROVED"
+              },
+              {
+                "name": "HIDDEN",
+                "value": "HIDDEN"
+              },
+              {
+                "name": "REJECTED",
+                "value": "REJECTED"
+              }
+            ]
+          },
+          "DonationFrequency": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "ONE_TIME",
+                "value": "ONE_TIME"
+              },
+              {
+                "name": "MONTHLY",
+                "value": "MONTHLY"
+              }
+            ]
+          },
+          "DonationStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "PENDING",
+                "value": "PENDING"
+              },
+              {
+                "name": "SUCCEEDED",
+                "value": "SUCCEEDED"
+              },
+              {
+                "name": "FAILED",
+                "value": "FAILED"
+              },
+              {
+                "name": "CANCELED",
+                "value": "CANCELED"
+              }
+            ]
+          },
+          "MediaType": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "VIDEO",
+                "value": "VIDEO"
+              },
+              {
+                "name": "PHOTO",
+                "value": "PHOTO"
+              },
+              {
+                "name": "COMPETITION_LINK",
+                "value": "COMPETITION_LINK"
+              }
+            ]
+          },
+          "ReactionType": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "LIKE",
+                "value": "LIKE"
+              },
+              {
+                "name": "FIRE",
+                "value": "FIRE"
+              },
+              {
+                "name": "CLAP",
+                "value": "CLAP"
+              },
+              {
+                "name": "TROPHY",
+                "value": "TROPHY"
+              }
+            ]
+          },
           "SubscriptionStatus": {
             "codecId": "pg/text@1",
             "members": [
@@ -66,12 +192,12 @@
                 "value": "FREE"
               },
               {
-                "name": "PRO",
-                "value": "PRO"
+                "name": "GOLD",
+                "value": "GOLD"
               },
               {
-                "name": "ELITE",
-                "value": "ELITE"
+                "name": "PREMIUM",
+                "value": "PREMIUM"
               }
             ]
           },
@@ -212,12 +338,19 @@
               "table": "AthleteProfile"
             }
           },
-          "MediaAsset": {
+          "Comment": {
             "fields": {
               "authorId": {
                 "nullable": false,
                 "type": {
                   "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "content": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
@@ -231,13 +364,6 @@
                   }
                 }
               },
-              "durationSec": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/int4@1",
-                  "kind": "scalar"
-                }
-              },
               "id": {
                 "nullable": false,
                 "type": {
@@ -245,21 +371,35 @@
                   "kind": "scalar"
                 }
               },
-              "isPublished": {
+              "isReported": {
                 "nullable": false,
                 "type": {
                   "codecId": "pg/bool@1",
                   "kind": "scalar"
                 }
               },
-              "playbackUrl": {
+              "mediaId": {
                 "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "parentId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "reportReason": {
+                "nullable": true,
                 "type": {
                   "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
-              "requiredTier": {
+              "status": {
                 "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
@@ -267,16 +407,9 @@
                 },
                 "valueSet": {
                   "entityKind": "enum",
-                  "entityName": "SubscriptionTier",
+                  "entityName": "CommentStatus",
                   "namespaceId": "public",
                   "plane": "domain"
-                }
-              },
-              "streamKey": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
                 }
               },
               "updatedAt": {
@@ -307,6 +440,739 @@
                   "namespace": "public"
                 }
               },
+              "media": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "mediaId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "MediaAsset",
+                  "namespace": "public"
+                }
+              },
+              "reactions": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "commentId"
+                  ]
+                },
+                "to": {
+                  "model": "CommentReaction",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "authorId": {
+                  "column": "authorId"
+                },
+                "content": {
+                  "column": "content"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "isReported": {
+                  "column": "isReported"
+                },
+                "mediaId": {
+                  "column": "mediaId"
+                },
+                "parentId": {
+                  "column": "parentId"
+                },
+                "reportReason": {
+                  "column": "reportReason"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "Comment"
+            }
+          },
+          "CommentReaction": {
+            "fields": {
+              "commentId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 3
+                  }
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "type": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "ReactionType",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 3
+                  }
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "comment": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "commentId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Comment",
+                  "namespace": "public"
+                }
+              },
+              "user": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "commentId": {
+                  "column": "commentId"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "type": {
+                  "column": "type"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "CommentReaction"
+            }
+          },
+          "Competition": {
+            "fields": {
+              "accessTier": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "AccessTier",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "country": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 3
+                  }
+                }
+              },
+              "eventDate": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 3
+                  }
+                }
+              },
+              "externalUrl": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "isPublished": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "location": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "resultSummary": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "slug": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sport": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "streamUrl": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "title": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 3
+                  }
+                }
+              }
+            },
+            "relations": {
+              "mediaAssets": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "competitionId"
+                  ]
+                },
+                "to": {
+                  "model": "MediaAsset",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "accessTier": {
+                  "column": "accessTier"
+                },
+                "country": {
+                  "column": "country"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "eventDate": {
+                  "column": "eventDate"
+                },
+                "externalUrl": {
+                  "column": "externalUrl"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "isPublished": {
+                  "column": "isPublished"
+                },
+                "location": {
+                  "column": "location"
+                },
+                "resultSummary": {
+                  "column": "resultSummary"
+                },
+                "slug": {
+                  "column": "slug"
+                },
+                "sport": {
+                  "column": "sport"
+                },
+                "streamUrl": {
+                  "column": "streamUrl"
+                },
+                "title": {
+                  "column": "title"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "Competition"
+            }
+          },
+          "Donation": {
+            "fields": {
+              "amountCents": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "campaignSlug": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 3
+                  }
+                }
+              },
+              "currency": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "donorEmail": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "donorId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "donorName": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "frequency": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "DonationFrequency",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "isAnonymous": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "isPublicOnWall": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "message": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "DonationStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "stripePaymentIntentId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "stripeSubscriptionId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 3
+                  }
+                }
+              }
+            },
+            "relations": {
+              "donor": {
+                "cardinality": "N:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "donorId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "amountCents": {
+                  "column": "amountCents"
+                },
+                "campaignSlug": {
+                  "column": "campaignSlug"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "currency": {
+                  "column": "currency"
+                },
+                "donorEmail": {
+                  "column": "donorEmail"
+                },
+                "donorId": {
+                  "column": "donorId"
+                },
+                "donorName": {
+                  "column": "donorName"
+                },
+                "frequency": {
+                  "column": "frequency"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "isAnonymous": {
+                  "column": "isAnonymous"
+                },
+                "isPublicOnWall": {
+                  "column": "isPublicOnWall"
+                },
+                "message": {
+                  "column": "message"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "stripePaymentIntentId": {
+                  "column": "stripePaymentIntentId"
+                },
+                "stripeSubscriptionId": {
+                  "column": "stripeSubscriptionId"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "Donation"
+            }
+          },
+          "MediaAsset": {
+            "fields": {
+              "accessTier": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "AccessTier",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "authorId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "competitionId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 3
+                  }
+                }
+              },
+              "durationSec": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "isPublished": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "playbackUrl": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sport": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "streamKey": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "thumbnailUrl": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "type": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "MediaType",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 3
+                  }
+                }
+              }
+            },
+            "relations": {
+              "author": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "authorId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              },
+              "comments": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "mediaId"
+                  ]
+                },
+                "to": {
+                  "model": "Comment",
+                  "namespace": "public"
+                }
+              },
+              "competition": {
+                "cardinality": "N:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "competitionId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Competition",
+                  "namespace": "public"
+                }
+              },
               "translations": {
                 "cardinality": "1:N",
                 "on": {
@@ -325,8 +1191,14 @@
             },
             "storage": {
               "fields": {
+                "accessTier": {
+                  "column": "accessTier"
+                },
                 "authorId": {
                   "column": "authorId"
+                },
+                "competitionId": {
+                  "column": "competitionId"
                 },
                 "createdAt": {
                   "column": "createdAt"
@@ -343,11 +1215,17 @@
                 "playbackUrl": {
                   "column": "playbackUrl"
                 },
-                "requiredTier": {
-                  "column": "requiredTier"
+                "sport": {
+                  "column": "sport"
                 },
                 "streamKey": {
                   "column": "streamKey"
+                },
+                "thumbnailUrl": {
+                  "column": "thumbnailUrl"
+                },
+                "type": {
+                  "column": "type"
                 },
                 "updatedAt": {
                   "column": "updatedAt"
@@ -815,6 +1693,51 @@
                   "namespace": "public"
                 }
               },
+              "commentReactions": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "CommentReaction",
+                  "namespace": "public"
+                }
+              },
+              "comments": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "authorId"
+                  ]
+                },
+                "to": {
+                  "model": "Comment",
+                  "namespace": "public"
+                }
+              },
+              "donations": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "donorId"
+                  ]
+                },
+                "to": {
+                  "model": "Donation",
+                  "namespace": "public"
+                }
+              },
               "mediaAssets": {
                 "cardinality": "1:N",
                 "on": {
@@ -1010,16 +1933,186 @@
                 }
               ]
             },
-            "MediaAsset": {
+            "Comment": {
               "checks": [
                 {
-                  "expression": "\"requiredTier\" IN ('FREE', 'PRO', 'ELITE')",
-                  "name": "MediaAsset_requiredTier_check_877d5527",
-                  "prefix": "MediaAsset_requiredTier_check"
+                  "expression": "\"status\" IN ('PENDING', 'APPROVED', 'HIDDEN', 'REJECTED')",
+                  "name": "Comment_status_check_4d4f3368",
+                  "prefix": "Comment_status_check"
                 }
               ],
               "columns": {
                 "authorId": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                },
+                "content": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 3
+                  }
+                },
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "isReported": {
+                  "codecId": "pg/bool@1",
+                  "dataType": "pg/bool",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nullable": false
+                },
+                "mediaId": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                },
+                "parentId": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": true
+                },
+                "reportReason": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "PENDING"
+                  },
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "CommentStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 3
+                  }
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "name": "Comment_mediaId_idx_6b06655c"
+                  },
+                  "source": {
+                    "columns": [
+                      "mediaId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Comment"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "MediaAsset"
+                  }
+                },
+                {
+                  "index": {
+                    "name": "Comment_authorId_idx_e47547ed"
+                  },
+                  "source": {
+                    "columns": [
+                      "authorId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Comment"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "User"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "authorId"
+                  ],
+                  "name": "Comment_authorId_idx_e47547ed",
+                  "prefix": "Comment_authorId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "mediaId"
+                  ],
+                  "name": "Comment_mediaId_idx_6b06655c",
+                  "prefix": "Comment_mediaId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "mediaId",
+                    "status"
+                  ],
+                  "name": "Comment_mediaId_status_idx_d059535a",
+                  "prefix": "Comment_mediaId_status_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "parentId"
+                  ],
+                  "name": "Comment_parentId_idx_6a68f597",
+                  "prefix": "Comment_parentId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "CommentReaction": {
+              "checks": [
+                {
+                  "expression": "\"type\" IN ('LIKE', 'FIRE', 'CLAP', 'TROPHY')",
+                  "name": "CommentReaction_type_check_87535003",
+                  "prefix": "CommentReaction_type_check"
+                }
+              ],
+              "columns": {
+                "commentId": {
                   "codecId": "pg/int4@1",
                   "dataType": "pg/int4",
                   "nullable": false
@@ -1036,10 +2129,515 @@
                     "precision": 3
                   }
                 },
-                "durationSec": {
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "type": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "LIKE"
+                  },
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "ReactionType",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 3
+                  }
+                },
+                "userId": {
                   "codecId": "pg/int4@1",
                   "dataType": "pg/int4",
                   "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "name": "CommentReaction_commentId_idx_b5a4f615"
+                  },
+                  "source": {
+                    "columns": [
+                      "commentId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "CommentReaction"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Comment"
+                  }
+                },
+                {
+                  "index": {
+                    "name": "CommentReaction_userId_idx_a489d58a"
+                  },
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "CommentReaction"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "User"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "commentId"
+                  ],
+                  "name": "CommentReaction_commentId_idx_b5a4f615",
+                  "prefix": "CommentReaction_commentId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "CommentReaction_userId_idx_a489d58a",
+                  "prefix": "CommentReaction_userId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "commentId",
+                    "userId",
+                    "type"
+                  ]
+                }
+              ]
+            },
+            "Competition": {
+              "checks": [
+                {
+                  "expression": "\"accessTier\" IN ('PUBLIC', 'GOLD', 'PREMIUM')",
+                  "name": "Competition_accessTier_check_4adb5135",
+                  "prefix": "Competition_accessTier_check"
+                }
+              ],
+              "columns": {
+                "accessTier": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "PUBLIC"
+                  },
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "AccessTier",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "country": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 3
+                  }
+                },
+                "eventDate": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 3
+                  }
+                },
+                "externalUrl": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "isPublished": {
+                  "codecId": "pg/bool@1",
+                  "dataType": "pg/bool",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nullable": false
+                },
+                "location": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "resultSummary": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "slug": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "sport": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "streamUrl": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "title": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 3
+                  }
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [
+                {
+                  "columns": [
+                    "eventDate",
+                    "isPublished"
+                  ],
+                  "name": "Competition_eventDate_isPublished_idx_dc8e1734",
+                  "prefix": "Competition_eventDate_isPublished_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "slug"
+                  ]
+                }
+              ]
+            },
+            "Donation": {
+              "checks": [
+                {
+                  "expression": "\"frequency\" IN ('ONE_TIME', 'MONTHLY')",
+                  "name": "Donation_frequency_check_e9824378",
+                  "prefix": "Donation_frequency_check"
+                },
+                {
+                  "expression": "\"status\" IN ('PENDING', 'SUCCEEDED', 'FAILED', 'CANCELED')",
+                  "name": "Donation_status_check_6abad72d",
+                  "prefix": "Donation_status_check"
+                }
+              ],
+              "columns": {
+                "amountCents": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                },
+                "campaignSlug": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 3
+                  }
+                },
+                "currency": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "eur"
+                  },
+                  "nullable": false
+                },
+                "donorEmail": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "donorId": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": true
+                },
+                "donorName": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "frequency": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "ONE_TIME"
+                  },
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "DonationFrequency",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "isAnonymous": {
+                  "codecId": "pg/bool@1",
+                  "dataType": "pg/bool",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nullable": false
+                },
+                "isPublicOnWall": {
+                  "codecId": "pg/bool@1",
+                  "dataType": "pg/bool",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nullable": false
+                },
+                "message": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "PENDING"
+                  },
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "DonationStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "stripePaymentIntentId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "stripeSubscriptionId": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 3
+                  }
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "name": "Donation_donorId_idx_e0e8e1e7"
+                  },
+                  "source": {
+                    "columns": [
+                      "donorId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Donation"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "User"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "campaignSlug"
+                  ],
+                  "name": "Donation_campaignSlug_idx_8628ead3",
+                  "prefix": "Donation_campaignSlug_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "donorId"
+                  ],
+                  "name": "Donation_donorId_idx_e0e8e1e7",
+                  "prefix": "Donation_donorId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "status",
+                    "isPublicOnWall"
+                  ],
+                  "name": "Donation_status_isPublicOnWall_idx_cb747fee",
+                  "prefix": "Donation_status_isPublicOnWall_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "stripePaymentIntentId"
+                  ]
+                },
+                {
+                  "columns": [
+                    "stripeSubscriptionId"
+                  ]
+                }
+              ]
+            },
+            "MediaAsset": {
+              "checks": [
+                {
+                  "expression": "\"accessTier\" IN ('PUBLIC', 'GOLD', 'PREMIUM')",
+                  "name": "MediaAsset_accessTier_check_4adb5135",
+                  "prefix": "MediaAsset_accessTier_check"
+                },
+                {
+                  "expression": "\"type\" IN ('VIDEO', 'PHOTO', 'COMPETITION_LINK')",
+                  "name": "MediaAsset_type_check_f52d2586",
+                  "prefix": "MediaAsset_type_check"
+                }
+              ],
+              "columns": {
+                "accessTier": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "PUBLIC"
+                  },
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "AccessTier",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "authorId": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                },
+                "competitionId": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 3
+                  }
+                },
+                "durationSec": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": true
                 },
                 "id": {
                   "codecId": "pg/int4@1",
@@ -1064,25 +2662,35 @@
                   "dataType": "pg/text",
                   "nullable": false
                 },
-                "requiredTier": {
+                "sport": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
-                  "default": {
-                    "kind": "literal",
-                    "value": "FREE"
-                  },
-                  "nullable": false,
-                  "valueSet": {
-                    "entityKind": "valueSet",
-                    "entityName": "SubscriptionTier",
-                    "namespaceId": "public",
-                    "plane": "storage"
-                  }
+                  "nullable": true
                 },
                 "streamKey": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
-                  "nullable": false
+                  "nullable": true
+                },
+                "thumbnailUrl": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "type": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "VIDEO"
+                  },
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "MediaType",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
                 },
                 "updatedAt": {
                   "codecId": "pg/timestamptz-date@1",
@@ -1112,15 +2720,51 @@
                     "namespaceId": "public",
                     "tableName": "User"
                   }
+                },
+                {
+                  "index": {
+                    "name": "MediaAsset_competitionId_idx_53fccd3b"
+                  },
+                  "source": {
+                    "columns": [
+                      "competitionId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "MediaAsset"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Competition"
+                  }
                 }
               ],
               "indexes": [
+                {
+                  "columns": [
+                    "accessTier",
+                    "isPublished"
+                  ],
+                  "name": "MediaAsset_accessTier_isPublished_idx_61edafdc",
+                  "prefix": "MediaAsset_accessTier_isPublished_idx",
+                  "unique": false
+                },
                 {
                   "columns": [
                     "authorId"
                   ],
                   "name": "MediaAsset_authorId_idx_e47547ed",
                   "prefix": "MediaAsset_authorId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "competitionId"
+                  ],
+                  "name": "MediaAsset_competitionId_idx_53fccd3b",
+                  "prefix": "MediaAsset_competitionId_idx",
                   "unique": false
                 }
               ],
@@ -1332,8 +2976,8 @@
                   "prefix": "Subscription_status_check"
                 },
                 {
-                  "expression": "\"tier\" IN ('FREE', 'PRO', 'ELITE')",
-                  "name": "Subscription_tier_check_4ef91e76",
+                  "expression": "\"tier\" IN ('FREE', 'GOLD', 'PREMIUM')",
+                  "name": "Subscription_tier_check_756e40ce",
                   "prefix": "Subscription_tier_check"
                 }
               ],
@@ -1587,6 +3231,56 @@
             }
           },
           "valueSet": {
+            "AccessTier": {
+              "kind": "valueSet",
+              "values": [
+                "PUBLIC",
+                "GOLD",
+                "PREMIUM"
+              ]
+            },
+            "CommentStatus": {
+              "kind": "valueSet",
+              "values": [
+                "PENDING",
+                "APPROVED",
+                "HIDDEN",
+                "REJECTED"
+              ]
+            },
+            "DonationFrequency": {
+              "kind": "valueSet",
+              "values": [
+                "ONE_TIME",
+                "MONTHLY"
+              ]
+            },
+            "DonationStatus": {
+              "kind": "valueSet",
+              "values": [
+                "PENDING",
+                "SUCCEEDED",
+                "FAILED",
+                "CANCELED"
+              ]
+            },
+            "MediaType": {
+              "kind": "valueSet",
+              "values": [
+                "VIDEO",
+                "PHOTO",
+                "COMPETITION_LINK"
+              ]
+            },
+            "ReactionType": {
+              "kind": "valueSet",
+              "values": [
+                "LIKE",
+                "FIRE",
+                "CLAP",
+                "TROPHY"
+              ]
+            },
             "SubscriptionStatus": {
               "kind": "valueSet",
               "values": [
@@ -1601,8 +3295,8 @@
               "kind": "valueSet",
               "values": [
                 "FREE",
-                "PRO",
-                "ELITE"
+                "GOLD",
+                "PREMIUM"
               ]
             },
             "UserRole": {
@@ -1620,10 +3314,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "611e64b9923080f808e84a3f63c1470853ebca068175974a17d9463aa229e07d"
+    "storageHash": "988d8073b861617b199de1d6720e319be0b1d1b9ad92387e4fb640e1f4bdf0d1"
   },
   "execution": {
-    "executionHash": "ec5608b8e737a156a9bf898f32cdcb694d977865b3f3df38afb9c0729dd95fc9",
+    "executionHash": "57f849c1f38dd9f6217b049b3030c0d89958c0670104aeac703723433f4c397b",
     "mutations": {
       "defaults": [
         {
@@ -1657,6 +3351,146 @@
           },
           "ref": {
             "entry": "AthleteProfile",
+            "field": "updatedAt",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator",
+            "params": {
+              "precision": 3
+            }
+          },
+          "ref": {
+            "entry": "Comment",
+            "field": "createdAt",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator",
+            "params": {
+              "precision": 3
+            }
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator",
+            "params": {
+              "precision": 3
+            }
+          },
+          "ref": {
+            "entry": "Comment",
+            "field": "updatedAt",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator",
+            "params": {
+              "precision": 3
+            }
+          },
+          "ref": {
+            "entry": "CommentReaction",
+            "field": "createdAt",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator",
+            "params": {
+              "precision": 3
+            }
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator",
+            "params": {
+              "precision": 3
+            }
+          },
+          "ref": {
+            "entry": "CommentReaction",
+            "field": "updatedAt",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator",
+            "params": {
+              "precision": 3
+            }
+          },
+          "ref": {
+            "entry": "Competition",
+            "field": "createdAt",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator",
+            "params": {
+              "precision": 3
+            }
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator",
+            "params": {
+              "precision": 3
+            }
+          },
+          "ref": {
+            "entry": "Competition",
+            "field": "updatedAt",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator",
+            "params": {
+              "precision": 3
+            }
+          },
+          "ref": {
+            "entry": "Donation",
+            "field": "createdAt",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator",
+            "params": {
+              "precision": 3
+            }
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator",
+            "params": {
+              "precision": 3
+            }
+          },
+          "ref": {
+            "entry": "Donation",
             "field": "updatedAt",
             "namespace": "public"
           }

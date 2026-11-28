@@ -9,8 +9,8 @@ enum UserRole {
 
 enum SubscriptionTier {
   FREE
-  PRO
-  ELITE
+  GOLD
+  PREMIUM
 }
 
 enum SubscriptionStatus {
@@ -21,20 +21,61 @@ enum SubscriptionStatus {
   INCOMPLETE
 }
 
+enum DonationFrequency {
+  ONE_TIME
+  MONTHLY
+}
+
+enum DonationStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELED
+}
+
+enum MediaType {
+  VIDEO
+  PHOTO
+  COMPETITION_LINK
+}
+
+enum AccessTier {
+  PUBLIC
+  GOLD
+  PREMIUM
+}
+
+enum CommentStatus {
+  PENDING
+  APPROVED
+  HIDDEN
+  REJECTED
+}
+
+enum ReactionType {
+  LIKE
+  FIRE
+  CLAP
+  TROPHY
+}
+
 model User {
-  id               Int              @id @default(autoincrement())
-  email            String           @unique
-  username         String?          @unique
+  id               Int               @id @default(autoincrement())
+  email            String            @unique
+  username         String?           @unique
   name             String?
   passwordHash     String?
-  role             UserRole         @default(MEMBER)
-  preferredLocale  String           @default("fr")
-  stripeCustomerId String?          @unique
+  role             UserRole          @default(MEMBER)
+  preferredLocale  String            @default("fr")
+  stripeCustomerId String?           @unique
   subscription     Subscription?
+  donations        Donation[]
   athleteProfiles  AthleteProfile[]
   posts            Post[]
   mediaAssets      MediaAsset[]
-  createdAt        DateTime         @default(now()) @onCreate(now())
+  comments         Comment[]
+  commentReactions CommentReaction[]
+  createdAt        DateTime          @default(now()) @onCreate(now())
   updatedAt        temporal.UpdatedAt
 }
 
@@ -77,18 +118,70 @@ model Subscription {
   updatedAt            temporal.UpdatedAt
 }
 
+model Donation {
+  id                    Int               @id @default(autoincrement())
+  donorId               Int?
+  donor                 User?             @relation(fields: [donorId], references: [id])
+  donorName             String?
+  donorEmail            String?
+  amountCents           Int
+  currency              String            @default("eur")
+  frequency             DonationFrequency @default(ONE_TIME)
+  status                DonationStatus    @default(PENDING)
+  message               String?
+  isAnonymous           Boolean           @default(false)
+  isPublicOnWall        Boolean           @default(true)
+  campaignSlug          String?
+  stripePaymentIntentId String?           @unique
+  stripeSubscriptionId  String?           @unique
+  createdAt             DateTime          @default(now()) @onCreate(now())
+  updatedAt             temporal.UpdatedAt
+
+  @@index([status, isPublicOnWall])
+  @@index([campaignSlug])
+}
+
+model Competition {
+  id            Int          @id @default(autoincrement())
+  slug          String       @unique
+  title         String
+  sport         String
+  location      String
+  country       String?
+  eventDate     DateTime
+  resultSummary String?
+  externalUrl   String?
+  streamUrl     String?
+  accessTier    AccessTier   @default(PUBLIC)
+  isPublished   Boolean      @default(false)
+  mediaAssets   MediaAsset[]
+  createdAt     DateTime     @default(now()) @onCreate(now())
+  updatedAt     temporal.UpdatedAt
+
+  @@index([eventDate, isPublished])
+}
+
 model MediaAsset {
-  id           Int                @id @default(autoincrement())
-  authorId     Int
-  author       User               @relation(fields: [authorId], references: [id])
-  streamKey    String             @unique
-  playbackUrl  String
-  durationSec  Int
-  requiredTier SubscriptionTier   @default(FREE)
-  isPublished  Boolean            @default(false)
-  translations MediaTranslation[]
-  createdAt    DateTime           @default(now()) @onCreate(now())
-  updatedAt    temporal.UpdatedAt
+  id            Int                @id @default(autoincrement())
+  authorId      Int
+  author        User               @relation(fields: [authorId], references: [id])
+  competitionId Int?
+  competition   Competition?       @relation(fields: [competitionId], references: [id])
+  type          MediaType          @default(VIDEO)
+  accessTier    AccessTier         @default(PUBLIC)
+  streamKey     String?            @unique
+  playbackUrl   String
+  thumbnailUrl  String?
+  durationSec   Int?
+  sport         String?
+  isPublished   Boolean            @default(false)
+  translations  MediaTranslation[]
+  comments      Comment[]
+  createdAt     DateTime           @default(now()) @onCreate(now())
+  updatedAt     temporal.UpdatedAt
+
+  @@index([accessTier, isPublished])
+  @@index([competitionId])
 }
 
 model MediaTranslation {
@@ -103,4 +196,38 @@ model MediaTranslation {
   updatedAt    temporal.UpdatedAt
 
   @@unique([mediaId, locale])
+}
+
+model Comment {
+  id           Int               @id @default(autoincrement())
+  mediaId      Int
+  media        MediaAsset        @relation(fields: [mediaId], references: [id])
+  authorId     Int
+  author       User              @relation(fields: [authorId], references: [id])
+  parentId     Int?
+  content      String
+  status       CommentStatus     @default(PENDING)
+  isReported   Boolean           @default(false)
+  reportReason String?
+  reactions    CommentReaction[]
+  createdAt    DateTime          @default(now()) @onCreate(now())
+  updatedAt    temporal.UpdatedAt
+
+  @@index([mediaId, status])
+  @@index([authorId])
+  @@index([parentId])
+}
+
+model CommentReaction {
+  id        Int          @id @default(autoincrement())
+  commentId Int
+  comment   Comment      @relation(fields: [commentId], references: [id])
+  userId    Int
+  user      User         @relation(fields: [userId], references: [id])
+  type      ReactionType @default(LIKE)
+  createdAt DateTime     @default(now()) @onCreate(now())
+  updatedAt temporal.UpdatedAt
+
+  @@unique([commentId, userId, type])
+  @@index([commentId])
 }

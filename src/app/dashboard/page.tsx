@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { db } from "@/prisma/db";
 import { requireSession } from "@/features/auth/rbac";
 import { getMyAthleteProfiles } from "@/features/athlete-profile/queries";
 import {
   AthleteProfileForm,
   type AthleteProfileFormInitialData,
 } from "@/features/athlete-profile/components/athlete-profile-form";
+import { SubscriptionPlans } from "@/features/billing/components/subscription-plans";
 
 const PROFILE_ROLES = ["ATHLETE", "COACH", "ADMIN"] as const;
 
@@ -12,6 +14,7 @@ type DashboardPageProps = {
   searchParams: Promise<{
     edit?: string;
     new?: string;
+    subscription?: string;
   }>;
 };
 
@@ -19,6 +22,8 @@ export default async function DashboardPage({
   searchParams,
 }: DashboardPageProps) {
   const session = await requireSession();
+  const userId = Number(session.user.id);
+
   const canManageProfile = PROFILE_ROLES.includes(
     session.user.role as (typeof PROFILE_ROLES)[number]
   );
@@ -27,6 +32,23 @@ export default async function DashboardPage({
 
   const resolvedSearchParams = await searchParams;
   const profiles = canManageProfile ? await getMyAthleteProfiles() : [];
+
+  const dbUser = await db.orm.public.User
+    .where({ id: userId })
+    .first();
+  const subscription = await db.orm.public.Subscription
+    .where({ userId })
+    .first();
+
+  const isSubActive =
+    subscription &&
+    (subscription.status === "ACTIVE" || subscription.status === "TRIALING") &&
+    (!subscription.currentPeriodEnd ||
+      new Date(subscription.currentPeriodEnd) > new Date());
+
+  const currentTier: "FREE" | "GOLD" | "PREMIUM" = isSubActive
+    ? (subscription.tier as "FREE" | "GOLD" | "PREMIUM")
+    : "FREE";
 
   const requestedEditId = resolvedSearchParams.edit
     ? Number(resolvedSearchParams.edit)
@@ -50,24 +72,50 @@ export default async function DashboardPage({
     : null;
 
   return (
-    <main className="p-8 space-y-8">
+    <main className="p-8 space-y-8 max-w-6xl mx-auto">
       <header className="space-y-1">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-2xl font-bold">Tableau de bord</h1>
-          {canAccessCoachZone && (
-            <Link
-              href="/coach-zone"
-              className="text-sm underline text-gray-700 hover:text-black"
-            >
-              Accéder à l&apos;espace Coach &amp; Admin →
+          <div className="flex items-center gap-4 text-sm">
+            <Link href="/competitions" className="underline">
+              Compétitions &amp; Médias
             </Link>
-          )}
+            <Link href="/soutenir" className="underline">
+              Soutenir (Dons)
+            </Link>
+            {canAccessCoachZone && (
+              <Link
+                href="/coach-zone"
+                className="underline text-gray-700 hover:text-black"
+              >
+                Espace Coach &amp; Admin →
+              </Link>
+            )}
+          </div>
         </div>
         <p className="text-sm text-gray-600">
           Connecté en tant que <strong>{session.user.email}</strong> (Rôle :{" "}
-          <code>{session.user.role}</code>)
+          <code>{session.user.role}</code> · Niveau :{" "}
+          <strong>{currentTier}</strong>)
         </p>
       </header>
+
+      {resolvedSearchParams.subscription === "success" && (
+        <p className="rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">
+          Merci ! Votre abonnement est en cours de synchronisation.
+        </p>
+      )}
+      {resolvedSearchParams.subscription === "canceled" && (
+        <p className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+          La procédure d&apos;abonnement a été annulée.
+        </p>
+      )}
+
+      <SubscriptionPlans
+        currentTier={currentTier}
+        currentStatus={subscription?.status ?? null}
+        hasStripeCustomer={Boolean(dbUser?.stripeCustomerId)}
+      />
 
       {canManageProfile ? (
         <div className="grid gap-8 md:grid-cols-2 items-start">
